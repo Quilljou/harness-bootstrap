@@ -197,6 +197,26 @@ Collect the minimum product and technical context that changes the scaffold:
 
 For web projects, this phase must explicitly confirm or adjust the default web profile before scaffold generation.
 
+This phase must also infer whether the project likely needs AI provider scaffolding.
+
+Use the user's product description and required surfaces to infer likely provider capabilities, then ask the user to confirm the resulting provider bundle before scaffold generation.
+
+Default capability inference rules:
+
+- chat, copilot, agent, research, and workflow automation products imply `LLM/router` capability
+- image generation, video generation, creative studio, and media pipeline products imply `media generation` capability
+
+Default provider mapping rules:
+
+- inferred `LLM/router` capability maps to `OpenRouter`
+- inferred `media generation` capability maps to `fal`
+
+Provider defaults are intentionally narrow. Do not add other AI providers unless the user explicitly asks for them as provider overrides.
+
+If no AI capability is implied, do not generate speculative AI provider scaffolding.
+
+Record only the final locked provider decisions in `.codex/bootstrap.todo.md`. Do not write inference rationale or rejected provider candidates into runtime state.
+
 Do not invent missing product requirements. Use defaults where safe and record unresolved questions in bootstrap runtime state until the generated repo exists.
 
 ## Phase 2: Environment Detection
@@ -225,6 +245,8 @@ If `git` or `node` is missing, stop and report the blocker.
 If optional tools are missing, record them in `.codex/bootstrap.todo.md` and continue when safe.
 
 Environment detection results do not need a dedicated generated-repo document. Only durable setup expectations should flow into `README.md`, `QUALITY.md`, and the validation contract.
+
+If a local Postgres database is in scope, environment detection should also determine the best available local provisioning path, such as Docker or an existing native `postgres` installation.
 
 ## Phase 3: Repository Initialization and Scaffold Generation
 
@@ -276,6 +298,8 @@ Typical layers include:
 - placeholder modules for chosen providers
 - documentation surfaces
 
+If the user confirms `OpenRouter` or `fal`, bootstrap must generate provider-specific scaffolding rather than only generic provider placeholders.
+
 ### Placeholder-First Rule
 
 Do not implement real business logic during bootstrap.
@@ -289,6 +313,32 @@ Prefer:
 - provider interfaces
 - adapter boundaries
 - skeletal validation scripts
+
+Confirmed AI providers must still follow the placeholder-first rule. Bootstrap should add their SDK dependencies, environment contracts, and adapter stubs without wiring real product behavior.
+
+### Provider Boundary Rule
+
+For each confirmed provider, bootstrap must create an explicit adapter boundary that another agent can extend later without re-deciding the integration surface.
+
+Preferred shape:
+
+- a shared AI capability surface, such as `lib/ai/*`
+- provider-specific adapters, such as `lib/ai/providers/*`
+- a stable seam between application code and provider SDK calls
+
+Do not hard-code a single required file layout, but the generated repo must clearly separate shared capability interfaces from provider-specific adapter code.
+
+For the current default provider profile:
+
+- `OpenRouter` should use the OpenAI-compatible path with the `openai` SDK and an `OpenRouter` base URL
+- `fal` should use `@fal-ai/client` for media generation adapters
+
+When a provider is confirmed, bootstrap should generate it to `SDK + adapter + .env` depth:
+
+- include the provider SDK in the initial scaffold
+- create placeholder adapter modules for the confirmed provider
+- connect provider configuration through the generated env access layer
+- document the provider in the generated repo knowledge surfaces
 
 ### Runtime Harness Rule
 
@@ -408,6 +458,7 @@ At minimum, that command should verify:
 - `docs/exec-plans/*` directories exist
 - internal doc references in `AGENTS.md`, `README.md`, and `PLANS.md` point to real files
 - observability and environment contract files are in sync with documentation when those surfaces are generated
+- confirmed provider env examples, adapter stubs, and knowledge-doc references stay in sync when provider scaffolding is generated
 
 ## Phase 6: Environment and Provider Contracts
 
@@ -419,6 +470,17 @@ Rules:
 - no real secrets in git
 - only chosen providers or clearly marked future providers
 - comments for unknowns rather than invented values
+
+Bootstrap should also create or update local `.env.local` when values can be filled safely on the current machine.
+
+Rules for `.env.local`:
+
+- keep `.env.local` out of git
+- write only local-machine values, never committed template values
+- prefer auto-filled local values over making the user transcribe them manually
+- never invent secrets that are not already available locally or provided by the user
+
+When AI providers are confirmed, `.env.example` and `.env.local.example` should group variables by provider and clearly mark which values are `required-now` versus `required-later`.
 
 Bootstrap should also create env access modules appropriate to the stack, such as:
 
@@ -434,11 +496,54 @@ For the default web profile, `.env.local.example` should at minimum guide the us
 - billing secrets when billing is in scope
 - storage credentials when storage is in scope
 
+When database connection is in scope, bootstrap should prefer to provision a local Postgres instance automatically and write the resulting connection string into `.env.local`.
+
+Preferred order:
+
+- reuse an already-running local Postgres instance when one is explicitly configured for the project
+- otherwise start a local Postgres instance using the best available supported path, such as Docker
+- if automatic provisioning is not possible, leave the value unfilled in `.env.local.example`, record the blocker, and tell the user exactly what remains to be supplied
+
+When `OpenRouter` is confirmed, the env contract should include:
+
+- `OPENROUTER_API_KEY`
+
+When `fal` is confirmed, the env contract should include:
+
+- `FAL_KEY`
+
+For confirmed AI providers, bootstrap should try to auto-fill `.env.local` from values already available on the local machine, such as shell environment variables or other explicitly available local secret sources.
+
+If an AI provider secret cannot be resolved locally, bootstrap must not invent one. Leave the value unfilled locally and clearly mark it as the remaining setup step.
+
+Unconfirmed AI providers must not appear as active scaffold requirements. They may only appear as comments, future options, or deferred notes.
+
 `SECURITY.md`, `RELIABILITY.md`, and generated provider boundary code should agree on required-now vs required-later environment values.
+
+`README.md`, `ARCHITECTURE.md`, `SECURITY.md`, and `RELIABILITY.md` must use the same provider names and env variable names as the generated scaffold.
+
+## Provider Profile Defaults
+
+Use the following defaults unless the user explicitly overrides them:
+
+- `LLM/router` capability -> `OpenRouter`
+- `media generation` capability -> `fal`
+
+Recommended SDK defaults:
+
+- `OpenRouter`: use the OpenAI-compatible path with the `openai` SDK and an `OpenRouter` base URL as the default implementation
+- `fal`: use `@fal-ai/client`
+
+Recommended env defaults:
+
+- `OpenRouter`: `OPENROUTER_API_KEY`
+- `fal`: `FAL_KEY`
+
+These defaults are for scaffold generation only. Users may still override providers during information intake.
 
 ## Phase 7: Post-Boot Verification
 
-After the user fills `.env.local`, bootstrap should run local verification.
+After bootstrap fills `.env.local` as far as safely possible, and after the user fills any remaining required values, bootstrap should run local verification.
 
 ### Default Web Verification Flow
 
@@ -479,7 +584,7 @@ Bootstrap is complete only when all of the following are true:
 8. `ARCHITECTURE.md`, `DESIGN.md`, `FRONTEND.md`, `SECURITY.md`, `RELIABILITY.md`, and `QUALITY.md` exist
 9. `docs/exec-plans/active/`, `docs/exec-plans/completed/`, `docs/exec-plans/tech-debt/`, and `docs/exec-plans/templates/exec-plan.md` exist
 10. `.env.example` exists and `.env.local.example` exists when local provider-backed setup is expected
-11. the user has been prompted to fill `.env.local` when required
+11. `.env.local` has been created or updated with all safely auto-resolvable local values, and the user has been prompted only for the remaining required values
 12. `.codex/bootstrap.todo.md` exists and can resume the bootstrap run
 13. code quality tooling is configured
 14. a stable validation command exists and is documented
@@ -490,6 +595,8 @@ Bootstrap is complete only when all of the following are true:
 19. baseline SEO placeholders exist for the default web profile
 20. the design system page exists and has been locally verified for web projects
 21. generated docs route future agents into `PLANS.md` and the knowledge base rather than relying on chat context
+22. when `OpenRouter` or `fal` is confirmed, the corresponding SDK dependency, adapter stub, `.env` contract, and knowledge-doc coverage exist and agree with each other
+23. when no AI provider is confirmed, the scaffold does not include speculative `OpenRouter`, `fal`, or other AI-provider wiring
 
 ## Recovery Protocol
 
