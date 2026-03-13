@@ -1,4 +1,4 @@
 interface:
-  display_name: "Greenfield Bootstrap"
+  display_name: "Harness Bootstrap"
   short_description: "Bootstrap repos with PLANS.md and exec plans"
-  default_prompt: "Use $greenfield-bootstrap to scaffold a new repository with a resumable bootstrap todo list, PLANS.md, docs/exec-plans, root knowledge docs, and post-start design system setup."
+  default_prompt: "Use $harness-bootstrap to scaffold a new repository with a resumable bootstrap todo list, PLANS.md, docs/exec-plans, root knowledge docs, and post-start design system setup."

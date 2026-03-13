@@ -1,4 +1,4 @@
-# Greenfield Bootstrap Spec
+# Harness Bootstrap Spec
 
 ## Purpose
 

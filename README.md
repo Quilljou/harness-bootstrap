@@ -1,4 +1,4 @@
-# Greenfield Bootstrap Skill
+# Harness Bootstrap Skill
 
 This repository contains a skill for bootstrapping new software projects into agent-readable repositories.
 
@@ -9,6 +9,14 @@ It is not a product codebase. It is a template-and-spec repo that helps an agent
 - root knowledge docs for architecture, design, frontend, security, reliability, and quality
 - placeholder-first provider boundaries
 - a resumable bootstrap runtime state in `.codex/bootstrap.todo.md`
+
+## Installation
+
+Install the skill from GitHub with:
+
+```bash
+npx skills add https://github.com/Quilljou/harness-bootstrap.git
+```
 
 ## What This Skill Generates
 
@@ -52,13 +60,13 @@ In practice, that means:
 
 ## Repository Structure
 
-- [SKILL.md](/Users/quill/Developer/color44/SKILL.md)
+- [SKILL.md](/Users/quill/Developer/harness-bootstrap/SKILL.md)
   The compact skill entrypoint
-- [references/bootstrap-spec.md](/Users/quill/Developer/color44/references/bootstrap-spec.md)
+- [references/bootstrap-spec.md](/Users/quill/Developer/harness-bootstrap/references/bootstrap-spec.md)
   The full operating contract for bootstrap
-- [assets/templates](/Users/quill/Developer/color44/assets/templates)
+- [assets/templates](/Users/quill/Developer/harness-bootstrap/assets/templates)
   Template source files laid out to mirror generated repo paths
-- [agents/openai.yaml](/Users/quill/Developer/color44/agents/openai.yaml)
+- [agents/openai.yaml](/Users/quill/Developer/harness-bootstrap/agents/openai.yaml)
   UI-facing skill metadata
 
 ## Template Layout

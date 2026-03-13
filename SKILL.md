@@ -1,9 +1,9 @@
 ---
-name: greenfield-bootstrap
+name: harness-bootstrap
 description: "Generator-first bootstrap for new software repositories that should ship with official-style agent context surfaces: `AGENTS.md`, `PLANS.md`, `docs/exec-plans/*`, root knowledge docs, a resumable bootstrap todo file, and a post-start design system page pass. Use when starting a new app, site, API, internal tool, or starter template from scratch; choosing a stack and scaffolder; or turning vague product intent into an agent-readable repository without implementing real business logic."
 ---
 
-# Greenfield Bootstrap
+# Harness Bootstrap
 
 Read `references/bootstrap-spec.md` before executing a real bootstrap run.
 
